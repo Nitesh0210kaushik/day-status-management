@@ -7,13 +7,17 @@ export function findUserByEmail(email: string) {
 export function findUserById(id: string) {
   return prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, createdAt: true },
+    select: { id: true, email: true, fullName: true, createdAt: true },
   });
 }
 
-export function createUser(email: string, passwordHash: string) {
+export function createUser(
+  email: string,
+  passwordHash: string,
+  fullName?: string,
+) {
   return prisma.user.create({
-    data: { email, passwordHash },
-    select: { id: true, email: true, createdAt: true },
+    data: { email, passwordHash, fullName },
+    select: { id: true, email: true, fullName: true, createdAt: true },
   });
 }

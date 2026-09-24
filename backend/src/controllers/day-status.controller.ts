@@ -24,7 +24,9 @@ export async function getStatus(request: Request, response: Response) {
 
 export async function getMonthStatuses(request: Request, response: Response) {
   const { year, month } = monthQuerySchema.parse(request.query);
-  const statuses = await dayStatusService.getByMonth(year, month);
+  const statuses = month
+    ? await dayStatusService.getByMonth(year, month)
+    : await dayStatusService.getByYear(year);
   return sendSuccess(response, dayStatusService.serializeStatuses(statuses));
 }
 

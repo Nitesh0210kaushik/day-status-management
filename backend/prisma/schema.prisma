@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid()) @db.Uuid
-  email        String      @unique @db.VarChar(255)
-  passwordHash String      @map("password_hash")
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  dayStatuses  DayStatus[]
-  refreshTokens RefreshToken[]
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique @db.VarChar(255)
+  fullName      String?        @map("full_name") @db.VarChar(255)
+  passwordHash  String         @map("password_hash")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  dayStatuses   DayStatus[]
+  sessions      Session[]
 
   @@map("users")
 }
 
-model RefreshToken {
+model Session {
   id        String    @id @default(uuid()) @db.Uuid
   tokenHash String    @unique @map("token_hash")
   userId    String    @map("user_id") @db.Uuid
@@ -30,7 +31,7 @@ model RefreshToken {
 
   @@index([userId])
   @@index([expiresAt])
-  @@map("refresh_tokens")
+  @@map("sessions")
 }
 
 model DayStatus {

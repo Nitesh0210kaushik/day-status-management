@@ -42,6 +42,11 @@ export async function requireAuth(
     return next(new AppError(401, "User account is no longer active"));
   }
 
-  request.user = { id: user.id, email: user.email };
+  request.user = {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    createdAt: user.createdAt,
+  };
   return next();
 }

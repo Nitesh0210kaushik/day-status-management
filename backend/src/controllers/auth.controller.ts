@@ -20,6 +20,7 @@ function sendSession(
   session: Awaited<ReturnType<typeof authService.register>>,
   statusCode = 200,
 ) {
+  response.locals.logResponse = false;
   response.cookie(ACCESS_COOKIE, session.accessToken, {
     ...refreshCookieOptions,
     maxAge: env.accessTokenCookieMaxAgeMs,
@@ -37,11 +38,16 @@ function sendSession(
 
 export async function register(request: Request, response: Response) {
   const input = registerSchema.parse(request.body);
-  const result = await authService.register(input.email, input.password);
+  const result = await authService.register(
+    input.email,
+    input.password,
+    input.fullName,
+  );
   sendSession(response, result, 201);
 }
 
 export function csrf(request: Request, response: Response) {
+  response.locals.logResponse = false;
   const token =
     (request.cookies[CSRF_COOKIE] as string | undefined) ??
     randomBytes(32).toString("hex");
@@ -58,6 +64,21 @@ export async function login(request: Request, response: Response) {
   const input = loginSchema.parse(request.body);
   const result = await authService.login(input.email, input.password);
   sendSession(response, result);
+}
+
+export function me(request: Request, response: Response) {
+  response.locals.logResponse = false;
+  if (!request.user) {
+    response.status(401).json({ error: "Authentication required" });
+    return;
+  }
+
+  return sendSuccess(response, {
+    user: {
+      ...request.user,
+      createdAt: request.user.createdAt.toISOString(),
+    },
+  });
 }
 
 export async function refresh(request: Request, response: Response) {

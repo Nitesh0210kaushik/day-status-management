@@ -8,6 +8,7 @@ export type ApiError = {
 export type AuthUserDto = {
   id: string;
   email: string;
+  fullName?: string | null;
   createdAt: string;
 };
 
@@ -22,6 +23,7 @@ export type DayStatusDto = {
 export type AuthResponse = { user: AuthUserDto };
 
 export function sendSuccess<T>(response: Response, data: T, statusCode = 200) {
+  response.locals.responseBody = data;
   return response.status(statusCode).json(data);
 }
 

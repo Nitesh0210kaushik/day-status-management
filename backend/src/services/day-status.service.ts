@@ -1,6 +1,7 @@
 import {
   findByDate,
   findByMonth,
+  findByYear,
   upsertByDate,
 } from "../repositories/day-status.repository";
 import { formatDateOnly, parseDateOnly } from "../utils/date";
@@ -14,6 +15,12 @@ export function getByMonth(year: number, month: number) {
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 1));
   return findByMonth(startDate, endDate);
+}
+
+export function getByYear(year: number) {
+  const startDate = new Date(Date.UTC(year, 0, 1));
+  const endDate = new Date(Date.UTC(year + 1, 0, 1));
+  return findByYear(startDate, endDate);
 }
 
 export function saveForDate(

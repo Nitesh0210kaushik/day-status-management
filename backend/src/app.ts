@@ -26,10 +26,19 @@ app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 app.use(
   pinoHttp({
+    customSuccessObject: (_request, response, value) => ({
+      ...value,
+      ...(env.nodeEnv === "development" &&
+      response.locals.logResponse !== false &&
+      response.locals.responseBody !== undefined
+        ? { response: response.locals.responseBody }
+        : {}),
+    }),
     redact: {
       paths: [
         "req.headers.cookie",
         "req.headers.authorization",
+        "req.headers.x-csrf-token",
         "res.headers.set-cookie",
       ],
       remove: true,

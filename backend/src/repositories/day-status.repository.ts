@@ -23,6 +23,14 @@ export function findByMonth(startDate: Date, endDate: Date) {
   });
 }
 
+export function findByYear(startDate: Date, endDate: Date) {
+  return prisma.dayStatus.findMany({
+    where: { date: { gte: startDate, lt: endDate } },
+    orderBy: { date: "asc" },
+    select: dayStatusSelect,
+  });
+}
+
 export function upsertByDate(date: Date, content: string, createdById: string) {
   return prisma.dayStatus.upsert({
     where: { date },

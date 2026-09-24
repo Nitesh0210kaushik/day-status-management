@@ -4,11 +4,11 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { createUser, findUserByEmail } from "../repositories/user.repository";
 import {
-  createRefreshToken,
-  findActiveRefreshToken,
-  revokeRefreshToken,
-  revokeRefreshTokenByHash,
-} from "../repositories/refresh-token.repository";
+  createSession,
+  findActiveSession,
+  revokeSession,
+  revokeSessionByHash,
+} from "../repositories/session.repository";
 import { AppError } from "../utils/errors";
 
 const SALT_ROUNDS = 12;
@@ -30,13 +30,14 @@ function getRefreshExpiry() {
   return expiry;
 }
 
-async function createSession(user: {
+async function createAuthSession(user: {
   id: string;
   email: string;
+  fullName?: string | null;
   createdAt: Date;
 }) {
   const refreshToken = randomBytes(48).toString("hex");
-  await createRefreshToken(
+  await createSession(
     hashRefreshToken(refreshToken),
     user.id,
     getRefreshExpiry(),
@@ -49,7 +50,11 @@ async function createSession(user: {
   };
 }
 
-export async function register(email: string, password: string) {
+export async function register(
+  email: string,
+  password: string,
+  fullName: string,
+) {
   const existingUser = await findUserByEmail(email);
 
   if (existingUser) {
@@ -57,9 +62,9 @@ export async function register(email: string, password: string) {
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await createUser(email, passwordHash);
+  const user = await createUser(email, passwordHash, fullName);
 
-  return createSession(user);
+  return createAuthSession(user);
 }
 
 export async function login(email: string, password: string) {
@@ -72,26 +77,26 @@ export async function login(email: string, password: string) {
     throw new AppError(401, "Invalid email or password");
   }
 
-  return createSession({
+  return createAuthSession({
     id: user.id,
     email: user.email,
+    fullName: user.fullName,
     createdAt: user.createdAt,
   });
 }
 
 export async function refresh(refreshToken: string) {
-  const storedToken = await findActiveRefreshToken(
-    hashRefreshToken(refreshToken),
-  );
+  const storedToken = await findActiveSession(hashRefreshToken(refreshToken));
 
   if (!storedToken) {
     throw new AppError(401, "Invalid or expired refresh token");
   }
 
-  await revokeRefreshToken(storedToken.id);
-  return createSession({
+  await revokeSession(storedToken.id);
+  return createAuthSession({
     id: storedToken.user.id,
     email: storedToken.user.email,
+    fullName: storedToken.user.fullName,
     createdAt: storedToken.user.createdAt,
   });
 }
@@ -102,6 +107,6 @@ export function getAccessTokenPayload(token: string) {
 
 export function logout(refreshToken: string | undefined) {
   return refreshToken
-    ? revokeRefreshTokenByHash(hashRefreshToken(refreshToken))
+    ? revokeSessionByHash(hashRefreshToken(refreshToken))
     : Promise.resolve();
 }
